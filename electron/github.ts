@@ -93,3 +93,37 @@ export async function listRuns(opts: GhOpts, workflowFile: string, perPage = 5):
   const data = await res.json();
   return data.workflow_runs || [];
 }
+
+export interface MergeResult {
+  status: 'merged' | 'already_up_to_date' | 'conflict';
+  sha?: string;
+  message?: string;
+}
+
+// Promove develop -> main via merge (mesmo efeito de um `git push origin main`
+// depois de mesclar localmente) -- o push resultante já dispara o deploy de
+// produção sozinho, então isso cobre "push + deploy" num passo só.
+export async function mergeBranch(opts: GhOpts, base: string, head: string): Promise<MergeResult> {
+  const res = await ghFetch('/merges', opts, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      base,
+      head,
+      commit_message: `Promove ${head} -> ${base} via SATRI DR Panel`,
+    }),
+  });
+
+  if (res.status === 201) {
+    const data = await res.json();
+    return { status: 'merged', sha: (data.sha || '').slice(0, 7) };
+  }
+  if (res.status === 204) {
+    return { status: 'already_up_to_date' };
+  }
+  if (res.status === 409) {
+    return { status: 'conflict', message: 'Conflito de merge -- precisa resolver manualmente (peça pro Claude Code fazer isso numa sessão normal).' };
+  }
+  const text = await res.text();
+  throw new Error(`Falha ao promover (${res.status}): ${text}`);
+}

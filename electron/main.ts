@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { readFileSync, existsSync } from 'fs';
 import { loadSecrets, updateSecrets, clearSecrets } from './secureStore';
-import { startDeviceFlow, pollDeviceFlow, dispatchWorkflow, listRuns } from './github';
+import { startDeviceFlow, pollDeviceFlow, dispatchWorkflow, listRuns, mergeBranch } from './github';
 import { listBackups, type StorageCreds } from './storage';
 import { loadData, saveData, type Task, type Contact, type IncidentRecord } from './localData';
 import { SCENARIOS } from './scenarios';
@@ -89,6 +89,11 @@ ipcMain.handle('github:dispatch', async (_e, workflowFile: string) => {
 ipcMain.handle('github:listRuns', async (_e, workflowFile: string, perPage?: number) => {
   const opts = requireGithub();
   return listRuns(opts, workflowFile, perPage);
+});
+
+ipcMain.handle('github:promote', async () => {
+  const opts = requireGithub();
+  return mergeBranch(opts, 'main', 'develop');
 });
 
 // --- Storage (R2 / B2) ---

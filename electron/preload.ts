@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('drPanel', {
     getRepo: () => ipcRenderer.invoke('github:getRepo'),
     dispatch: (workflowFile: string) => ipcRenderer.invoke('github:dispatch', workflowFile),
     listRuns: (workflowFile: string, perPage?: number) => ipcRenderer.invoke('github:listRuns', workflowFile, perPage),
+    promote: () => ipcRenderer.invoke('github:promote'),
   },
   storage: {
     setCreds: (provider: 'r2' | 'b2', creds: unknown) => ipcRenderer.invoke('storage:setCreds', provider, creds),

@@ -62,6 +62,51 @@ function PipelineCard({ title, subtitle, file, badgeColor }: { title: string; su
   );
 }
 
+function PromoteCard() {
+  const [confirming, setConfirming] = useState(false);
+  const [promoting, setPromoting] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const promote = async () => {
+    setPromoting(true);
+    setConfirming(false);
+    setResult(null);
+    try {
+      const r = await window.drPanel.github.promote();
+      if (r.status === 'merged') setResult({ ok: true, text: `✓ Promovido! Commit ${r.sha}. O deploy de produção já foi disparado — confira na seção abaixo em alguns segundos.` });
+      else if (r.status === 'already_up_to_date') setResult({ ok: true, text: 'Produção já estava com o mesmo código do staging — nada pra promover.' });
+      else setResult({ ok: false, text: r.message || 'Conflito ao promover.' });
+    } catch (e: any) {
+      setResult({ ok: false, text: e.message || 'Erro ao promover.' });
+    } finally {
+      setPromoting(false);
+    }
+  };
+
+  return (
+    <div className="card" style={{ borderColor: 'var(--danger)' }}>
+      <h3 style={{ marginTop: 0 }}>🚀 Promover develop → Produção</h3>
+      <p style={{ color: 'var(--muted)', fontSize: 13 }}>
+        Pega tudo que já está testado em staging e manda pra produção — o push e o deploy acontecem juntos, automaticamente, assim que você confirmar.
+      </p>
+      {!confirming && !promoting && (
+        <button className="danger" onClick={() => setConfirming(true)}>Promover pra Produção</button>
+      )}
+      {confirming && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontSize: 13 }}>Tem certeza? Isso vai pro ar de verdade.</span>
+          <button className="danger" onClick={promote}>Sim, promover agora</button>
+          <button className="secondary" onClick={() => setConfirming(false)}>Cancelar</button>
+        </div>
+      )}
+      {promoting && <p>Promovendo...</p>}
+      {result && (
+        <p style={{ color: result.ok ? 'var(--ok)' : 'var(--danger)', fontSize: 13, marginTop: 10 }}>{result.text}</p>
+      )}
+    </div>
+  );
+}
+
 export default function Deploys() {
   return (
     <div>
@@ -84,6 +129,8 @@ export default function Deploys() {
           Promover de <code>develop</code> pra <code>main</code> é sempre uma decisão manual — nunca acontece sozinho.
         </p>
       </div>
+
+      <PromoteCard />
 
       <PipelineCard
         title="🧪 Checagem (CI)"

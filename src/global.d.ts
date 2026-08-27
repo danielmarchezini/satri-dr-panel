@@ -58,6 +58,12 @@ export interface Contact {
   email?: string;
 }
 
+export interface MergeResult {
+  status: 'merged' | 'already_up_to_date' | 'conflict';
+  sha?: string;
+  message?: string;
+}
+
 export interface IncidentRecord {
   id: string;
   scenarioId: string;
@@ -83,6 +89,7 @@ declare global {
         getRepo: () => Promise<string>;
         dispatch: (workflowFile: string) => Promise<void>;
         listRuns: (workflowFile: string, perPage?: number) => Promise<WorkflowRun[]>;
+        promote: () => Promise<MergeResult>;
       };
       storage: {
         setCreds: (provider: 'r2' | 'b2', creds: StorageCreds) => Promise<void>;

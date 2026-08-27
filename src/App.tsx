@@ -4,12 +4,12 @@ import Dashboard from './components/Dashboard';
 import Actions from './components/Actions';
 import Deploys from './components/Deploys';
 import StorageConfig from './components/StorageConfig';
-import Runbook from './components/Runbook';
+import MarkdownDoc from './components/MarkdownDoc';
 import Checklist from './components/Checklist';
 import Tasks from './components/Tasks';
 import Contacts from './components/Contacts';
 
-type Tab = 'dashboard' | 'deploys' | 'actions' | 'storage' | 'runbook' | 'checklist' | 'tasks' | 'contacts';
+type Tab = 'dashboard' | 'deploys' | 'actions' | 'storage' | 'runbook' | 'architecture' | 'protocol' | 'checklist' | 'tasks' | 'contacts';
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -30,6 +30,8 @@ export default function App() {
     { id: 'tasks', icon: '📋', label: 'Tarefas' },
     { id: 'contacts', icon: '📞', label: 'Contatos' },
     { id: 'storage', icon: '🗄️', label: 'Armazenamento' },
+    { id: 'architecture', icon: '🗺️', label: 'Arquitetura' },
+    { id: 'protocol', icon: '🧭', label: 'Protocolo (CLAUDE.md)' },
     { id: 'runbook', icon: '📖', label: 'Runbook' },
   ];
 
@@ -61,7 +63,9 @@ export default function App() {
         {tab === 'tasks' && <Tasks />}
         {tab === 'contacts' && <Contacts />}
         {tab === 'storage' && <StorageConfig />}
-        {tab === 'runbook' && <Runbook />}
+        {tab === 'architecture' && <MarkdownDoc title="Mapa de Arquitetura" file="ARCHITECTURE.md" />}
+        {tab === 'protocol' && <MarkdownDoc title="Protocolo de Desenvolvimento (CLAUDE.md)" file="CLAUDE.md" />}
+        {tab === 'runbook' && <MarkdownDoc title="Runbook de Disaster Recovery" file="DISASTER_RECOVERY.md" />}
       </div>
     </div>
   );

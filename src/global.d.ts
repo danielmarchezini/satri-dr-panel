@@ -99,6 +99,9 @@ declare global {
       runbook: {
         read: () => Promise<string>;
       };
+      docs: {
+        read: (filename: string) => Promise<string>;
+      };
       scenarios: {
         list: () => Promise<Scenario[]>;
       };

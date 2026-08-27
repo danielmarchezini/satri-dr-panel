@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('drPanel', {
   runbook: {
     read: () => ipcRenderer.invoke('runbook:read'),
   },
+  docs: {
+    read: (filename: string) => ipcRenderer.invoke('docs:read', filename),
+  },
   scenarios: {
     list: () => ipcRenderer.invoke('scenarios:list'),
   },

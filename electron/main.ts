@@ -116,16 +116,25 @@ ipcMain.handle('storage:list', async (_e, provider: 'r2' | 'b2') => {
 
 // --- Runbook ---
 
-ipcMain.handle('runbook:read', async () => {
+ipcMain.handle('runbook:read', async () => readDoc('DISASTER_RECOVERY.md'));
+
+// --- Documentos (Arquitetura, Protocolo, Runbook) ---
+
+const ALLOWED_DOCS = new Set(['DISASTER_RECOVERY.md', 'ARCHITECTURE.md', 'CLAUDE.md']);
+
+function readDoc(filename: string): string {
+  if (!ALLOWED_DOCS.has(filename)) return `# Documento inválido: ${filename}`;
   const candidates = [
-    join(__dirname, '../resources/DISASTER_RECOVERY.md'),
-    join(process.resourcesPath || '', 'DISASTER_RECOVERY.md'),
+    join(__dirname, '../resources', filename),
+    join(process.resourcesPath || '', filename),
   ];
   for (const path of candidates) {
     if (existsSync(path)) return readFileSync(path, 'utf-8');
   }
-  return '# Runbook não encontrado\n\nCopie `docs/DISASTER_RECOVERY.md` do repositório `intranetsatri` para `resources/DISASTER_RECOVERY.md` neste projeto.';
-});
+  return `# ${filename} não encontrado\n\nCopie \`${filename}\` do repositório \`intranetsatri\` para \`resources/${filename}\` neste projeto.`;
+}
+
+ipcMain.handle('docs:read', async (_e, filename: string) => readDoc(filename));
 
 // --- Cenários / checklist ---
 

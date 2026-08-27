@@ -28,7 +28,7 @@ export async function startDeviceFlow(): Promise<DeviceCodeResponse> {
 
 // Poll conforme o `interval` retornado pelo passo anterior, até o usuário
 // autorizar no navegador ou o código expirar.
-export async function pollDeviceFlow(deviceCode: string): Promise<{ status: 'pending' | 'ok' | 'error'; token?: string; message?: string }> {
+export async function pollDeviceFlow(deviceCode: string): Promise<{ status: 'pending' | 'ok' | 'error'; token?: string; message?: string; nextIntervalSec?: number }> {
   const res = await fetch('https://github.com/login/oauth/access_token', {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -39,9 +39,13 @@ export async function pollDeviceFlow(deviceCode: string): Promise<{ status: 'pen
     }),
   });
   const data = await res.json();
+  console.log('[auth:pollLogin] resposta do GitHub:', JSON.stringify(data));
   if (data.access_token) return { status: 'ok', token: data.access_token };
   if (data.error === 'authorization_pending') return { status: 'pending' };
-  if (data.error === 'slow_down') return { status: 'pending' };
+  // GitHub manda um novo `interval` (em segundos) quando pede pra
+  // desacelerar -- se a gente ignora e continua no ritmo antigo, ele so
+  // aumenta a punicao a cada tentativa e o login nunca completa.
+  if (data.error === 'slow_down') return { status: 'pending', nextIntervalSec: data.interval };
   return { status: 'error', message: data.error_description || data.error || 'Erro desconhecido' };
 }
 

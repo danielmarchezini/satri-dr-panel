@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('drPanel', {
     setRepo: (repo: string) => ipcRenderer.invoke('github:setRepo', repo),
     getRepo: () => ipcRenderer.invoke('github:getRepo'),
     dispatch: (workflowFile: string) => ipcRenderer.invoke('github:dispatch', workflowFile),
-    listRuns: (workflowFile: string) => ipcRenderer.invoke('github:listRuns', workflowFile),
+    listRuns: (workflowFile: string, perPage?: number) => ipcRenderer.invoke('github:listRuns', workflowFile, perPage),
   },
   storage: {
     setCreds: (provider: 'r2' | 'b2', creds: unknown) => ipcRenderer.invoke('storage:setCreds', provider, creds),
@@ -20,5 +20,29 @@ contextBridge.exposeInMainWorld('drPanel', {
   },
   runbook: {
     read: () => ipcRenderer.invoke('runbook:read'),
+  },
+  scenarios: {
+    list: () => ipcRenderer.invoke('scenarios:list'),
+  },
+  tasks: {
+    list: () => ipcRenderer.invoke('tasks:list'),
+    add: (title: string) => ipcRenderer.invoke('tasks:add', title),
+    toggle: (id: string) => ipcRenderer.invoke('tasks:toggle', id),
+    remove: (id: string) => ipcRenderer.invoke('tasks:remove', id),
+  },
+  contacts: {
+    list: () => ipcRenderer.invoke('contacts:list'),
+    save: (contact: unknown) => ipcRenderer.invoke('contacts:save', contact),
+    remove: (id: string) => ipcRenderer.invoke('contacts:remove', id),
+  },
+  checklist: {
+    get: (scenarioId: string) => ipcRenderer.invoke('checklist:get', scenarioId),
+    toggleStep: (scenarioId: string, stepIndex: number) => ipcRenderer.invoke('checklist:toggleStep', scenarioId, stepIndex),
+    reset: (scenarioId: string) => ipcRenderer.invoke('checklist:reset', scenarioId),
+  },
+  incidents: {
+    list: () => ipcRenderer.invoke('incidents:list'),
+    start: (scenarioId: string, scenarioTitle: string, totalSteps: number) => ipcRenderer.invoke('incidents:start', scenarioId, scenarioTitle, totalSteps),
+    finish: (id: string, completedSteps: number, notes: string) => ipcRenderer.invoke('incidents:finish', id, completedSteps, notes),
   },
 });

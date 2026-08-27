@@ -5,6 +5,8 @@ import { readFileSync, existsSync } from 'fs';
 import { loadSecrets, updateSecrets, clearSecrets } from './secureStore';
 import { startDeviceFlow, pollDeviceFlow, dispatchWorkflow, listRuns } from './github';
 import { listBackups, type StorageCreds } from './storage';
+import { loadData, saveData, type Task, type Contact, type IncidentRecord } from './localData';
+import { SCENARIOS } from './scenarios';
 
 const isDev = !app.isPackaged;
 const DEFAULT_REPO = 'danielmarchezini/intranetsatri';
@@ -24,6 +26,7 @@ function createWindow() {
 
   if (isDev) {
     win.loadURL('http://localhost:5173');
+    win.webContents.openDevTools({ mode: 'detach' });
   } else {
     win.loadFile(join(__dirname, '../dist/index.html'));
   }
@@ -83,9 +86,9 @@ ipcMain.handle('github:dispatch', async (_e, workflowFile: string) => {
   await dispatchWorkflow(opts, workflowFile);
 });
 
-ipcMain.handle('github:listRuns', async (_e, workflowFile: string) => {
+ipcMain.handle('github:listRuns', async (_e, workflowFile: string, perPage?: number) => {
   const opts = requireGithub();
-  return listRuns(opts, workflowFile);
+  return listRuns(opts, workflowFile, perPage);
 });
 
 // --- Storage (R2 / B2) ---
@@ -117,4 +120,106 @@ ipcMain.handle('runbook:read', async () => {
     if (existsSync(path)) return readFileSync(path, 'utf-8');
   }
   return '# Runbook não encontrado\n\nCopie `docs/DISASTER_RECOVERY.md` do repositório `intranetsatri` para `resources/DISASTER_RECOVERY.md` neste projeto.';
+});
+
+// --- Cenários / checklist ---
+
+ipcMain.handle('scenarios:list', async () => SCENARIOS);
+
+// --- Tarefas ---
+
+ipcMain.handle('tasks:list', async () => loadData().tasks);
+
+ipcMain.handle('tasks:add', async (_e, title: string) => {
+  const data = loadData();
+  const task: Task = { id: `t_${Date.now()}`, title, done: false, createdAt: new Date().toISOString() };
+  data.tasks.push(task);
+  saveData(data);
+  return data.tasks;
+});
+
+ipcMain.handle('tasks:toggle', async (_e, id: string) => {
+  const data = loadData();
+  const t = data.tasks.find(x => x.id === id);
+  if (t) t.done = !t.done;
+  saveData(data);
+  return data.tasks;
+});
+
+ipcMain.handle('tasks:remove', async (_e, id: string) => {
+  const data = loadData();
+  data.tasks = data.tasks.filter(x => x.id !== id);
+  saveData(data);
+  return data.tasks;
+});
+
+// --- Contatos ---
+
+ipcMain.handle('contacts:list', async () => loadData().contacts);
+
+ipcMain.handle('contacts:save', async (_e, contact: Contact) => {
+  const data = loadData();
+  const idx = data.contacts.findIndex(c => c.id === contact.id);
+  if (idx >= 0) data.contacts[idx] = contact;
+  else data.contacts.push({ ...contact, id: contact.id || `c_${Date.now()}` });
+  saveData(data);
+  return data.contacts;
+});
+
+ipcMain.handle('contacts:remove', async (_e, id: string) => {
+  const data = loadData();
+  data.contacts = data.contacts.filter(c => c.id !== id);
+  saveData(data);
+  return data.contacts;
+});
+
+// --- Checklist (progresso por cenário) ---
+
+ipcMain.handle('checklist:get', async (_e, scenarioId: string) => {
+  return loadData().checklistProgress[scenarioId] || {};
+});
+
+ipcMain.handle('checklist:toggleStep', async (_e, scenarioId: string, stepIndex: number) => {
+  const data = loadData();
+  if (!data.checklistProgress[scenarioId]) data.checklistProgress[scenarioId] = {};
+  data.checklistProgress[scenarioId][stepIndex] = !data.checklistProgress[scenarioId][stepIndex];
+  saveData(data);
+  return data.checklistProgress[scenarioId];
+});
+
+ipcMain.handle('checklist:reset', async (_e, scenarioId: string) => {
+  const data = loadData();
+  data.checklistProgress[scenarioId] = {};
+  saveData(data);
+});
+
+// --- Incidentes ---
+
+ipcMain.handle('incidents:list', async () => loadData().incidents);
+
+ipcMain.handle('incidents:start', async (_e, scenarioId: string, scenarioTitle: string, totalSteps: number) => {
+  const data = loadData();
+  const incident: IncidentRecord = {
+    id: `i_${Date.now()}`,
+    scenarioId,
+    scenarioTitle,
+    startedAt: new Date().toISOString(),
+    completedSteps: 0,
+    totalSteps,
+  };
+  data.incidents.unshift(incident);
+  saveData(data);
+  return incident;
+});
+
+ipcMain.handle('incidents:finish', async (_e, id: string, completedSteps: number, notes: string) => {
+  const data = loadData();
+  const inc = data.incidents.find(i => i.id === id);
+  if (inc) {
+    inc.endedAt = new Date().toISOString();
+    inc.completedSteps = completedSteps;
+    inc.notes = notes;
+  }
+  saveData(data);
+  return data.incidents;
 });

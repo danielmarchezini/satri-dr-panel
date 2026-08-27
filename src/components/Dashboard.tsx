@@ -28,6 +28,24 @@ function RunBadge({ run }: { run?: WorkflowRun }) {
   return <span className="badge danger">✕ falhou ({daysSince(run.run_started_at)}d atrás)</span>;
 }
 
+function Heatmap({ runs, weeks }: { runs: WorkflowRun[]; weeks: number }) {
+  const cells = [];
+  const now = new Date();
+  for (let i = weeks - 1; i >= 0; i--) {
+    const weekStart = new Date(now.getTime() - i * 7 * 86400000);
+    const run = runs.find(r => Math.abs(new Date(r.run_started_at).getTime() - weekStart.getTime()) < 4 * 86400000);
+    let color = 'var(--border)'; // sem execução
+    let title = 'sem execução';
+    if (run) {
+      if (run.status !== 'completed') { color = 'var(--warn)'; title = 'em andamento'; }
+      else if (run.conclusion === 'success') { color = 'var(--ok)'; title = `sucesso — ${new Date(run.run_started_at).toLocaleDateString('pt-BR')}`; }
+      else { color = 'var(--danger)'; title = `falhou — ${new Date(run.run_started_at).toLocaleDateString('pt-BR')}`; }
+    }
+    cells.push(<div key={i} title={title} style={{ width: 14, height: 14, borderRadius: 3, background: color }} />);
+  }
+  return <div style={{ display: 'flex', gap: 3 }}>{cells}</div>;
+}
+
 const LABELS = ['staging', 'production'] as const;
 
 export default function Dashboard() {
@@ -53,9 +71,9 @@ export default function Dashboard() {
       try { setB2(await window.drPanel.storage.list('b2')); }
       catch (e: any) { errs.push(`Backblaze B2: ${e.message}`); }
     }
-    try { setBackupRuns(await window.drPanel.github.listRuns('backup-postgres.yml')); }
+    try { setBackupRuns(await window.drPanel.github.listRuns('backup-postgres.yml', 26)); }
     catch (e: any) { errs.push(`Runs de backup: ${e.message}`); }
-    try { setRestoreRuns(await window.drPanel.github.listRuns('test-restore.yml')); }
+    try { setRestoreRuns(await window.drPanel.github.listRuns('test-restore.yml', 12)); }
     catch (e: any) { errs.push(`Runs de restore: ${e.message}`); }
 
     setErrors(errs);
@@ -144,6 +162,23 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Histórico — últimas 26 semanas</h3>
+        <div style={{ marginBottom: 14 }}>
+          <div className="stat-label" style={{ marginBottom: 6 }}>Backup semanal</div>
+          <Heatmap runs={backupRuns} weeks={26} />
+        </div>
+        <div>
+          <div className="stat-label" style={{ marginBottom: 6 }}>Teste de restore mensal</div>
+          <Heatmap runs={restoreRuns} weeks={12} />
+        </div>
+        <div style={{ display: 'flex', gap: 14, marginTop: 12, fontSize: 12, color: 'var(--muted)' }}>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: 'var(--ok)', marginRight: 4 }} />sucesso</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: 'var(--danger)', marginRight: 4 }} />falhou</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: 'var(--border)', marginRight: 4 }} />sem execução</span>
+        </div>
+      </div>
 
       <button className="secondary" onClick={load} disabled={loading}>
         {loading ? 'Atualizando...' : '↻ Atualizar'}

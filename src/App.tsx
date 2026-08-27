@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Actions from './components/Actions';
+import Deploys from './components/Deploys';
 import StorageConfig from './components/StorageConfig';
 import Runbook from './components/Runbook';
 import Checklist from './components/Checklist';
 import Tasks from './components/Tasks';
 import Contacts from './components/Contacts';
 
-type Tab = 'dashboard' | 'actions' | 'storage' | 'runbook' | 'checklist' | 'tasks' | 'contacts';
+type Tab = 'dashboard' | 'deploys' | 'actions' | 'storage' | 'runbook' | 'checklist' | 'tasks' | 'contacts';
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -23,6 +24,7 @@ export default function App() {
 
   const items: { id: Tab; icon: string; label: string }[] = [
     { id: 'dashboard', icon: '📊', label: 'Saúde dos backups' },
+    { id: 'deploys', icon: '🚀', label: 'Deploys' },
     { id: 'actions', icon: '⚡', label: 'Ações' },
     { id: 'checklist', icon: '✅', label: 'Checklist / Incidente' },
     { id: 'tasks', icon: '📋', label: 'Tarefas' },
@@ -53,6 +55,7 @@ export default function App() {
       </div>
       <div className="main">
         {tab === 'dashboard' && <Dashboard />}
+        {tab === 'deploys' && <Deploys />}
         {tab === 'actions' && <Actions />}
         {tab === 'checklist' && <Checklist />}
         {tab === 'tasks' && <Tasks />}

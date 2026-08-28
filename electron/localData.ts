@@ -44,6 +44,7 @@ const DEFAULT_DATA: LocalData = {
     { id: 't1', title: 'Revogar a chave antiga do Backblaze B2 que foi colada no chat', done: false, createdAt: new Date().toISOString() },
     { id: 't2', title: 'Confirmar 2FA ativo nas contas admin (Supabase, Vercel, GitHub, Cloudflare, Backblaze)', done: false, createdAt: new Date().toISOString() },
     { id: 't3', title: 'Rodar um teste de restore real de produção pelo menos uma vez', done: false, createdAt: new Date().toISOString() },
+    { id: 't4', title: 'Renovar o token do GitLab (GITLAB_MIRROR_TOKEN) antes de 2027-08-27 -- expira, senão o espelho do repositório para de funcionar', done: false, createdAt: new Date().toISOString() },
   ],
   contacts: [],
   incidents: [],

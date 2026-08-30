@@ -10,6 +10,10 @@ export interface StoredSecrets {
   r2?: { accessKey: string; secretKey: string; endpoint: string; bucket: string };
   b2?: { accessKey: string; secretKey: string; endpoint: string; bucket: string };
   githubRepo?: string; // ex: danielmarchezini/intranetsatri
+  // A service key so' e' usada pra ler o endpoint de metricas do Supabase
+  // (memoria/disco/conexoes da instancia). Fica criptografada como o resto.
+  supabaseStaging?: { url: string; anonKey: string; serviceKey?: string };
+  supabaseProduction?: { url: string; anonKey: string; serviceKey?: string };
 }
 
 function filePath() {

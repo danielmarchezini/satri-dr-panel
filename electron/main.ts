@@ -7,6 +7,7 @@ import { startDeviceFlow, pollDeviceFlow, dispatchWorkflow, listRuns, mergeBranc
 import { listBackups, type StorageCreds } from './storage';
 import { loadData, saveData, type Task, type Contact, type IncidentRecord } from './localData';
 import { SCENARIOS } from './scenarios';
+import { checkEnv, type SupabaseCreds } from './health';
 
 const isDev = !app.isPackaged;
 const DEFAULT_REPO = 'danielmarchezini/intranetsatri';
@@ -112,6 +113,31 @@ ipcMain.handle('storage:list', async (_e, provider: 'r2' | 'b2') => {
   const creds = s[provider];
   if (!creds) throw new Error(`Credenciais de ${provider.toUpperCase()} não configuradas`);
   return listBackups(creds);
+});
+
+// --- Saude do Supabase (staging / producao) ---
+
+const HEALTH_KEY = { staging: 'supabaseStaging', production: 'supabaseProduction' } as const;
+
+ipcMain.handle('health:setCreds', async (_e, env: 'staging' | 'production', creds: SupabaseCreds) => {
+  updateSecrets({ [HEALTH_KEY[env]]: creds } as any);
+});
+
+ipcMain.handle('health:getCredsStatus', async () => {
+  const s = loadSecrets();
+  return {
+    staging: { configured: !!s.supabaseStaging?.url, hasServiceKey: !!s.supabaseStaging?.serviceKey },
+    production: { configured: !!s.supabaseProduction?.url, hasServiceKey: !!s.supabaseProduction?.serviceKey },
+  };
+});
+
+ipcMain.handle('health:check', async () => {
+  const s = loadSecrets();
+  // Os dois ambientes em paralelo: um fora do ar nao pode atrasar o outro.
+  return Promise.all([
+    checkEnv('staging', s.supabaseStaging),
+    checkEnv('production', s.supabaseProduction),
+  ]);
 });
 
 // --- Runbook ---

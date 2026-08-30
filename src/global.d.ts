@@ -64,6 +64,42 @@ export interface MergeResult {
   message?: string;
 }
 
+export type ServiceState = 'ok' | 'lento' | 'fora' | 'sem-credencial';
+
+export interface ServicePing {
+  state: ServiceState;
+  httpStatus: number | null;
+  latencyMs: number;
+  detail?: string;
+}
+
+export interface HealthMetrics {
+  memTotalBytes: number;
+  memAvailableBytes: number;
+  memUsedPct: number;
+  diskTotalBytes: number;
+  diskAvailBytes: number;
+  diskUsedPct: number;
+  connectionsMax: number | null;
+  connectionsWaiting: number | null;
+}
+
+export interface EnvHealth {
+  env: 'staging' | 'production';
+  checkedAt: string;
+  configured: boolean;
+  rest: ServicePing;
+  auth: ServicePing;
+  metrics: HealthMetrics | null;
+  metricsError?: string;
+}
+
+export interface SupabaseCreds {
+  url: string;
+  anonKey: string;
+  serviceKey?: string;
+}
+
 export interface IncidentRecord {
   id: string;
   scenarioId: string;
@@ -95,6 +131,11 @@ declare global {
         setCreds: (provider: 'r2' | 'b2', creds: StorageCreds) => Promise<void>;
         getCredsStatus: () => Promise<{ r2: boolean; b2: boolean }>;
         list: (provider: 'r2' | 'b2') => Promise<StorageSummary>;
+      };
+      health: {
+        check: () => Promise<EnvHealth[]>;
+        setCreds: (env: 'staging' | 'production', creds: SupabaseCreds) => Promise<void>;
+        getCredsStatus: () => Promise<Record<'staging' | 'production', { configured: boolean; hasServiceKey: boolean }>>;
       };
       runbook: {
         read: () => Promise<string>;

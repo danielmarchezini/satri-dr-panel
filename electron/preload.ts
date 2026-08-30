@@ -19,6 +19,11 @@ contextBridge.exposeInMainWorld('drPanel', {
     getCredsStatus: () => ipcRenderer.invoke('storage:getCredsStatus'),
     list: (provider: 'r2' | 'b2') => ipcRenderer.invoke('storage:list', provider),
   },
+  health: {
+    check: () => ipcRenderer.invoke('health:check'),
+    setCreds: (env: 'staging' | 'production', creds: unknown) => ipcRenderer.invoke('health:setCreds', env, creds),
+    getCredsStatus: () => ipcRenderer.invoke('health:getCredsStatus'),
+  },
   runbook: {
     read: () => ipcRenderer.invoke('runbook:read'),
   },

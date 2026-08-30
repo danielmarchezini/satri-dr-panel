@@ -8,8 +8,9 @@ import MarkdownDoc from './components/MarkdownDoc';
 import Checklist from './components/Checklist';
 import Tasks from './components/Tasks';
 import Contacts from './components/Contacts';
+import Health from './components/Health';
 
-type Tab = 'dashboard' | 'deploys' | 'actions' | 'storage' | 'runbook' | 'architecture' | 'protocol' | 'checklist' | 'tasks' | 'contacts';
+type Tab = 'dashboard' | 'health' | 'deploys' | 'actions' | 'storage' | 'runbook' | 'architecture' | 'protocol' | 'checklist' | 'tasks' | 'contacts';
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -24,6 +25,7 @@ export default function App() {
 
   const items: { id: Tab; icon: string; label: string }[] = [
     { id: 'dashboard', icon: '📊', label: 'Saúde dos backups' },
+    { id: 'health', icon: '💚', label: 'Saúde do Supabase' },
     { id: 'deploys', icon: '🚀', label: 'Deploys' },
     { id: 'actions', icon: '⚡', label: 'Ações' },
     { id: 'checklist', icon: '✅', label: 'Checklist / Incidente' },
@@ -57,6 +59,7 @@ export default function App() {
       </div>
       <div className="main">
         {tab === 'dashboard' && <Dashboard />}
+        {tab === 'health' && <Health />}
         {tab === 'deploys' && <Deploys />}
         {tab === 'actions' && <Actions />}
         {tab === 'checklist' && <Checklist />}
